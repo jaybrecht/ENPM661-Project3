@@ -1,0 +1,43 @@
+height: 200
+width: 300
+
+circle
+    center: 225,150
+    radius: 25
+    color: 255,204,204
+
+polygon
+    point: 25,185
+    point: 50,150
+    point: 20,120
+    color: 255,204,204
+
+polygon
+    point: 75,185
+    point: 100,150
+    point: 75,120
+    point: 50,150
+    point: 25,185
+    color: 255,204,204
+
+polygon
+    point: 225,10
+    point: 200,25
+    point: 225,40
+    point: 250,25
+    color: 255,204,204
+
+ellipse
+    center: 150,100
+    axis: 40,20
+    angle: 0 
+    start: 0
+    end: 360
+    color: 255,204,204
+
+rotatedrect
+    start_point: 95,30
+    l1: 10
+    l2: 75
+    angle: 30
+    color: 255,204,204
