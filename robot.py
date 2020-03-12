@@ -40,7 +40,7 @@ class Robot:
             x=x+d*math.cos(phi)*math.cos(phi)
             y=x+d*math.sin(phi)*math.sin(phi)
 
-        theta=theta+phi
+        theta=np.rad2deg(theta+phi)
         new_point=(x,y,theta)
 
 
@@ -62,6 +62,20 @@ class Robot:
                 neighbors.append((new_point,cost))
 
         return neighbors
+
+    def discretize(self, point):
+        x = point[0]
+        y = point[1]
+        theta = point[2]
+        thresh_bins=np.arrange(0,1,self.thresh)
+
+        xint=math.floor(x) #get just the int portion
+        xdec=x % 1 # get just the decimal portion
+
+        yint=math.floor(x) #get just the int portion
+        ydec=x % 1  #get just the decimal portion
+
+        return new_point
 
 
     def BFS(self):
