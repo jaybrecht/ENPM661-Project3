@@ -9,30 +9,46 @@ class Robot:
         self.maze = maze
 
     def move(self,point,direction):
+        d=self.dist
         x = point[0]
         y = point[1]
-        if direction == 'E':
-            new_point = (x-1,y)
-        elif direction == 'NE':
-            new_point = (x-1,y+1)
-        elif direction == 'N':
-            new_point = (x,y+1)
-        elif direction == 'NW':
-            new_point = (x+1,y+1)
-        elif direction == 'W':
-            new_point = (x+1,y)
-        elif direction == 'SW':
-            new_point = (x+1,y-1)
-        elif direction == 'S':
-            new_point = (x,y-1)
-        elif direction == 'SE':
-            new_point = (x-1,y-1)
+        theta = np.deg2rad(point[2])
+
+        if direction == 'left60':
+            phi=np.deg2rad(60)
+            x=x+d*math.cos(phi)*math.cos(phi)
+            y=x+d*math.sin(phi)*math.sin(phi)
+
+        elif direction == 'left30':
+            phi=np.deg2rad(30)
+            x=x+d*math.cos(phi)*math.cos(phi)
+            y=x+d*math.sin(phi)*math.sin(phi)
+
+        elif direction == 'straight':
+            phi=0
+            x=x+d*math.cos(theta)
+            y=y+d*math.sin(theta)
+            new_point = (,,theta)
+
+        elif direction == 'right30':
+            phi=np.deg2rad(-30)
+            x=x+d*math.cos(phi)*math.cos(phi)
+            y=x+d*math.sin(phi)*math.sin(phi)
+
+        elif direction == 'right60':
+            phi=np.deg2rad(-60)
+            x=x+d*math.cos(phi)*math.cos(phi)
+            y=x+d*math.sin(phi)*math.sin(phi)
+
+        theta=np.rad2deg(theta+phi)
+        new_point=(x,y,theta)
+
 
         return new_point
 
 
     def check_neighbors(self,cur_node):
-        directions = ['E','NE','N','NW','W','SW','S','SE']
+        directions = ['left60','left30','straight','right30','right60']
 
         neighbors = []
         for direction in directions:
@@ -46,6 +62,20 @@ class Robot:
                 neighbors.append((new_point,cost))
 
         return neighbors
+
+    def discretize(self, point):
+        x = point[0]
+        y = point[1]
+        theta = point[2]
+        thresh_bins=np.arrange(0,1,self.thresh)
+
+        xint=math.floor(x) #get just the int portion
+        xdec=x % 1 # get just the decimal portion
+
+        yint=math.floor(x) #get just the int portion
+        ydec=x % 1  #get just the decimal portion
+
+        return new_point
 
 
     def BFS(self):
