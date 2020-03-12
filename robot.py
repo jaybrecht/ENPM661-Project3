@@ -145,6 +145,68 @@ class Robot:
         self.costs = costs
         self.foundGoal = isgoal
 
+    def A_star(self):
+        start_point = self.maze.start
+        goal_point = self.maze.goal
+        maze = self.maze.maze
+        
+        nodes = []
+
+        # each node = (x,y,theta) <- floats
+        # nodes = [node1,node2,..,node_n]
+
+        # checked_nodes = binary 3D matrix of size h/thresh,w/thresh,360/th_thresh 1 for have visited 0 for haven't
+        # costs = 3D matrix of size h/thresh,w/thresh,360/th_thresh index is (cost2come,cost2goal)
+        # parents = 3D matrix of size h/thresh,w/thresh,360/th_thresh index is ind of parent in nodes
+
+        # queue needs to be a tuple of (node_ind,cost2come+cost2goal)
+
+        # Checked points are additionally stored in a set which is much faster for 
+        # checking if the node has already been visited
+        points = {start_point}
+        costs = np.full((maze.shape[0],maze.shape[1]),np.inf)
+        parents = np.full((maze.shape[0],maze.shape[1]),np.nan,dtype=np.int32)
+
+         #set start node to have parent of -1 and cost of 0
+        nodes.append(start_point) #add the start node to nodes
+        costs[start_point[1],start_point[0]] = 0
+        parents[start_point[1],start_point[0]] = -1
+
+        # The queue is strucuted as a deque which allows for much faster operation
+        # when accessing the first item in the list
+        queue = deque()
+        queue.append(0) #set the start_node as the first node in the queue
+
+        isgoal = False
+        cost2come = 0
+
+        while queue:
+            # Set the current node as the top of the queue and remove it
+            parent = queue.popleft()
+            cur_node = nodes[parent]
+            cost2come = costs[cur_node[1],cur_node[0]]
+            neighbors = self.check_neighbors(cur_node)
+
+            for n in neighbors:
+                p = n[0]
+                c = n[1]
+                if p not in points:
+                    nodes.append(p)
+                    points.add(p)
+                    queue.append(len(nodes)-1)
+                if cost2come + c < costs[p[1],p[0]]:
+                    costs[p[1],p[0]] = cost2come + c
+                    parents[p[1],p[0]] = parent
+                if p == goal_point:
+                    isgoal = True
+                    queue.clear()
+                    break
+
+        self.nodes = nodes
+        self.parents = parents
+        self.costs = costs
+        self.foundGoal = isgoal
+
 
     def generate_path(self):
         nodes = self.nodes
