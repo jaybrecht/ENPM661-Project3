@@ -63,19 +63,24 @@ class Robot:
 
         return neighbors
 
-    def discretize(self, point):
-        x = point[0]
-        y = point[1]
-        theta = point[2]
-        thresh_bins=np.arrange(0,1,self.thresh)
+    def trunc(a,thresh):
+        dec_a = a % 1
+        int_a = a//1
 
-        xint=math.floor(x) #get just the int portion
-        xdec=x % 1 # get just the decimal portion
+        if dec_a % thresh < thresh/100:
+            trunc_a = int_a + dec_a
+        else: 
+            for val in np.arange(0,1,thresh):
+                if(dec_a-val)<=thresh:
+                    print(val)
+                    if abs(dec_a-(val)) < abs(dec_a-(val+thresh)):
+                        trunc_a = int_a+val
+                    else:
+                        trunc_a = int_a+(val+thresh)
+                    break
 
-        yint=math.floor(x) #get just the int portion
-        ydec=x % 1  #get just the decimal portion
+        return trunc_a
 
-        return new_point
 
 
     def BFS(self):
