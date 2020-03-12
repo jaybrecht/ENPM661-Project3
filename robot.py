@@ -81,6 +81,17 @@ class Robot:
 
         return trunc_a
 
+    def discretize(point, thresh):
+        x=point[0]
+        y=point[1]
+        theta=point[2]
+
+        x=trunc(x,thresh)
+        y=trunc(y,thresh)
+
+        new_point=(x,y,theta)
+        return new_point
+
 
 
     def BFS(self):
