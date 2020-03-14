@@ -7,15 +7,36 @@ from matplotlib.patches import Ellipse, Circle, Wedge, Polygon
 import matplotlib.pyplot as plt
 
 class Maze:
-    def __init__(self,filename,scale,ax):
+    def __init__(self,filename):
         # instatiates an object of class maze
         self.filename = filename
-        self.scale = scale
-        self.patches=[]
-        self.ax=ax
-        self.read_obstacles()        
 
-        self.image = np.zeros((self.height*scale,self.width*scale,3),np.uint8)
+        self.fig,self.ax = plt.subplots()
+
+        major_ticks_x = np.arange(0, 301, 20)
+        minor_ticks_x = np.arange(0, 301, 5)
+        major_ticks_y = np.arange(0, 201, 20)
+        minor_ticks_y = np.arange(0, 201, 5)
+
+        self.ax.set_xticks(major_ticks_x)
+        self.ax.set_xticks(minor_ticks_x, minor=True)
+        self.ax.set_yticks(major_ticks_y)
+        self.ax.set_yticks(minor_ticks_y, minor=True)
+
+        self.ax.grid(which='minor', alpha=0.2)
+        self.ax.grid(which='major', alpha=0.5)
+
+        self.ax.set_xlim(0, 300)
+        self.ax.set_ylim(0, 200)
+
+        self.ax.set_aspect('equal')
+
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.title("Maze")
+
+        self.patches = []
+        self.read_obstacles()        
 
         for obs in self.obstacles:
             if obs['type'] == 'c': # circle
@@ -28,8 +49,12 @@ class Maze:
                 self.draw_ellipse(obs,0,obs['color'])
                 
             elif obs['type'] == 'rr': # rotate rect
-                self.draw_rotated_rect(obs,0,obs['color'])
                 self.get_rr_points(obs)
+                self.draw_polygon(obs,0,obs['color'])
+                
+
+        p = PatchCollection(self.patches, alpha=1)
+        self.ax.add_collection(p)
 
 
     def in_bounds(self,point):
@@ -107,72 +132,25 @@ class Maze:
 
     def draw_circle(self,obs,offset,color):
         # Draws a circle on the maze image
-        x = obs['center'][0]
-        y = self.height - obs['center'][1]
-        center = (x*self.scale,y*self.scale)
-        radius = obs['radius']*self.scale
-
-        self.image = cv2.circle(self.image,center,radius+(offset*self.scale),color,-1)
+        x,y = obs['center']
+        radius = obs['radius']
         circle = Circle((x, y), radius)
         self.patches.append(circle)
-        # print(self.patches)
 
 
     def draw_polygon(self,obs,offset,color):
         # Draws a polygon on the maze image
-        points = []
-        for p in obs['points']:
-            points.append((p[0]*self.scale,(self.height*self.scale)-p[1]*self.scale))
-        
-        contour = np.array(points, dtype=np.int32)
-        
-        self.image = cv2.drawContours(self.image,[contour],-1,color,-1)
+        points = obs['points']
         polygon = Polygon(points, True)
         self.patches.append(polygon)
-        # print(self.patches)
                 
 
     def draw_ellipse(self,obs,offset,color):
         # Draws an ellipse on the maze image
-        x = obs['center'][0]
-        y = self.height - obs['center'][1]
-        center = (x*self.scale,y*self.scale)
-        axis = (obs['axis'][0]*self.scale+(offset*self.scale),
-                       obs['axis'][1]*self.scale+(offset*self.scale))
-        self.image = cv2.ellipse(self.image, center, axis, obs['angle'],
-                        obs['start'], obs['end'],color,-1)
+        x,y = obs['center']
+        axis = obs['axis']
         ellipse = Ellipse((x,y),2*axis[0],2*axis[1])
         self.patches.append(ellipse)
-        # print(self.patches)
-
-
-    def draw_rotated_rect(self,obs,offset,color):
-        # Draws a rotated rectangle on the maze image
-        w = obs['width']
-        h = obs['height']
-        ang1 = math.radians(obs['angle'])
-        ang2 = math.radians(90-obs['angle'])
-        p1 = obs['start_point']
-        p2 = (p1[0]-(w*math.cos(ang1)),p1[1]-(w*math.sin(ang1)))
-        p3 = (p1[0]+(h*math.cos(ang2)),p1[1]-(h*math.sin(ang2)))
-        p4 = (p3[0]-(w*math.cos(ang1)),p3[1]-(w*math.sin(ang1)))
-        points = [p1,p2,p4,p3]
-        spoints = []
-        for p in points:
-            spoints.append((p[0]*self.scale,(self.height*self.scale)-p[1]*self.scale))
-        contour = np.array(spoints, dtype=np.int32)
-        
-        if offset == 0:
-            self.image = cv2.drawContours(self.image,[contour],-1,color,-1)
-            polygon = Polygon(points, True)
-            self.patches.append(polygon) 
-        else:
-            off_contour = np.squeeze(contour)
-            polygon = Polygon(off_contour)
-            offset_poly = polygon.buffer(offset*self.scale,cap_style=2, join_style=2)
-            off_points = offset_poly.exterior.coords
-            off_contour = np.array(off_points, dtype=np.int32)
-            self.image = cv2.drawContours(self.image,[off_contour],-1,color,-1)
 
 
     def get_rr_points(self,obs):

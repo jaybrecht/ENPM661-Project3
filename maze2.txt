@@ -36,7 +36,7 @@ ellipse
     color: 255,204,204
 
 rotatedrect
-    start_point: 95,170
+    start_point: 95,30
     l1: 10
     l2: 75
     angle: 30

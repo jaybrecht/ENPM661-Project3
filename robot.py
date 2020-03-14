@@ -38,15 +38,15 @@ class Robot:
         elif direction == 'right60':
             phi=np.deg2rad(-60)
 
-        x=x+d*math.cos(theta+phi)
-        y=y+d*math.sin(theta+phi)
+        new_x=x+d*math.cos(theta+phi)
+        new_y=y+d*math.sin(theta+phi)
 
-        theta = round(np.rad2deg(theta+phi))
-        if theta >= 360:
-            theta = theta-360
+        new_theta = round(np.rad2deg(theta+phi))
+        if new_theta >= 360:
+            new_theta = new_theta-360
 
-        new_point = (x,y,theta)
-        plotter(self.maze.ax,point,new_point)
+        new_point = (new_x,new_y,new_theta)
+        # plotter(self.maze.ax,point,new_point)
         return new_point
 
 
@@ -158,22 +158,22 @@ class Robot:
 
 
     def generate_path(self):
-        nodes = self.nodes
-        parents = self.parents
         #Assume the last item in nodes is the goal node
-        goal = nodes[-1]
-        parent = parents[goal[1],goal[0]]
+        goal = self.nodes[-1]
+        disc_goal = self.discretize(goal)
+        parent = int(self.parents[disc_goal[0],disc_goal[1],disc_goal[2]])
         path_nodes = [parent]
         while parent != -1:
-            parent_node = nodes[path_nodes[-1]]
-            parent = parents[parent_node[1],parent_node[0]]
+            node = self.nodes[path_nodes[-1]]
+            disc_node = self.discretize(node)
+            parent = int(self.parents[disc_node[0],disc_node[1],disc_node[2]])
             path_nodes.append(parent)
         self.path = [goal]
         for ind in path_nodes:
             if ind == -1:
                 break
             else:
-                self.path.insert(0,nodes[ind])
+                self.path.insert(0,self.nodes[ind])
 
 
     def get_user_nodes(self):
@@ -242,6 +242,19 @@ class Robot:
         self.start = start_point
         self.goal = goal_point
         self.d = d
+
+
+    def plotter(self,start_pos,end_pos,color="black"):
+        x_s=start_pos[0]
+        y_s=start_pos[1]
+
+        x_f=end_pos[0]
+        y_f=end_pos[1]
+
+        dx=x_f-x_s
+        dy=y_f-y_s
+
+        q = self.maze.ax.arrow(x_s, y_s, dx, dy, head_width=0.5,length_includes_head=True, head_length=0.5, fc=color, ec=color)
 
 
 class PointRobot(Robot):

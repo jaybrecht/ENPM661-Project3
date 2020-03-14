@@ -11,54 +11,32 @@ userInput = False
 search_type = 'A' # D for Dijkstra, B for BFS, A for A*
 stepsize = 100 #controls the number of nodes shown in each frame of visualization
 
-
-# Set up plotter
-fig, ax = plt.subplots()
-plt.xlim(0,300)
-plt.ylim(0,200)
-plt.grid()
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.title("Maze")
-ax.set_aspect('equal')
-
-
 # Construct maze object
-scale = 1
-maze = Maze('maze2.txt', scale,ax)
+maze = Maze('maze2.txt')
 print("Maze created")
-
-
-p = PatchCollection(maze.patches, alpha=1)
-# colors = 100*np.random.rand(len(maze.patches))
-# p.set_array(np.array((255,255,255)))
-maze.ax.add_collection(p)
-
-
 
 # Contstruct the robot
 robot = PointRobot(maze,userInput)
 print("Robot created")
 
-# # Run Search
-# # if search_type == 'D':
-# #     robot.Dijkstra()
-# # if search_type == 'B':
-# #     robot.BFS()
+# Run Search
+if search_type == 'D':
+    robot.Dijkstra()
+if search_type == 'B':
+    robot.BFS()
 if search_type == 'A':
     robot.A_star()
 
 
-# # Flip the axis
-plt.ylim(max(plt.ylim()), min(plt.ylim()))
+if robot.foundGoal:
+    robot.generate_path()
+    for i in range(len(robot.path)-1):
+        robot.plotter(robot.path[i],robot.path[i+1])
+    print(robot.path)
+else:
+    print('The goal could not be found')
+    exit()
+
 plt.show()
-
-# # if robot.foundGoal:
-# #     print('Yay')
-# #     # robot.generate_path()
-# # else:
-# #     print('The goal could not be found')
-# #     exit()
-
 # # # Visualize the path
 # # # robot.visualize(show_visualization,write_to_video,stepsize)
