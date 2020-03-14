@@ -14,7 +14,7 @@ class Robot:
         else:
             self.start = (25,100,0)
             self.goal = (75,100,0)
-            self.d = 1
+            self.d = 5
         
 
     def move(self,point,direction):
@@ -25,28 +25,21 @@ class Robot:
 
         if direction == 'left60':
             phi=np.deg2rad(60)
-            x=x+d*math.cos(theta)*math.cos(phi)
-            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'left30':
             phi=np.deg2rad(30)
-            x=x+d*math.cos(theta)*math.cos(phi)
-            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'straight':
             phi=0
-            x=x+d*math.cos(theta)
-            y=y+d*math.sin(theta)
 
         elif direction == 'right30':
             phi=np.deg2rad(-30)
-            x=x+d*math.cos(theta)*math.cos(phi)
-            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'right60':
             phi=np.deg2rad(-60)
-            x=x+d*math.cos(theta)*math.cos(phi)
-            y=x+d*math.sin(theta)*math.sin(phi)
+
+        x=x+d*math.cos(theta+phi)
+        y=x+d*math.sin(theta+phi)
 
         theta = round(np.rad2deg(theta+phi))
         if theta >= 360:
