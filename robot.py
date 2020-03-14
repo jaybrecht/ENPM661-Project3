@@ -25,13 +25,13 @@ class Robot:
 
         if direction == 'left60':
             phi=np.deg2rad(60)
-            x=x+d*math.cos(phi)*math.cos(phi)
-            y=x+d*math.sin(phi)*math.sin(phi)
+            x=x+d*math.cos(theta)*math.cos(phi)
+            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'left30':
             phi=np.deg2rad(30)
-            x=x+d*math.cos(phi)*math.cos(phi)
-            y=x+d*math.sin(phi)*math.sin(phi)
+            x=x+d*math.cos(theta)*math.cos(phi)
+            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'straight':
             phi=0
@@ -40,13 +40,13 @@ class Robot:
 
         elif direction == 'right30':
             phi=np.deg2rad(-30)
-            x=x+d*math.cos(phi)*math.cos(phi)
-            y=x+d*math.sin(phi)*math.sin(phi)
+            x=x+d*math.cos(theta)*math.cos(phi)
+            y=x+d*math.sin(theta)*math.sin(phi)
 
         elif direction == 'right60':
             phi=np.deg2rad(-60)
-            x=x+d*math.cos(phi)*math.cos(phi)
-            y=x+d*math.sin(phi)*math.sin(phi)
+            x=x+d*math.cos(theta)*math.cos(phi)
+            y=x+d*math.sin(theta)*math.sin(phi)
 
         theta = round(np.rad2deg(theta+phi))
         if theta >= 360:
