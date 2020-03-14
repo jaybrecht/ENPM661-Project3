@@ -2,13 +2,18 @@ import cv2
 import math
 import numpy as np
 # from shapely.geometry import Polygon
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Ellipse, Circle, Wedge, Polygon
+import matplotlib.pyplot as plt
 
 class Maze:
-    def __init__(self,filename,scale):
+    def __init__(self,filename,scale,ax):
         # instatiates an object of class maze
         self.filename = filename
         self.scale = scale
-        self.read_obstacles()
+        self.patches=[]
+        self.ax=ax
+        self.read_obstacles()        
 
         self.image = np.zeros((self.height*scale,self.width*scale,3),np.uint8)
 
@@ -108,6 +113,9 @@ class Maze:
         radius = obs['radius']*self.scale
 
         self.image = cv2.circle(self.image,center,radius+(offset*self.scale),color,-1)
+        circle = Circle((x, y), radius)
+        self.patches.append(circle)
+        # print(self.patches)
 
 
     def draw_polygon(self,obs,offset,color):
@@ -118,7 +126,10 @@ class Maze:
         
         contour = np.array(points, dtype=np.int32)
         
-        self.image = cv2.drawContours(self.image,[contour],-1,color,-1) 
+        self.image = cv2.drawContours(self.image,[contour],-1,color,-1)
+        polygon = Polygon(points, True)
+        self.patches.append(polygon)
+        # print(self.patches)
                 
 
     def draw_ellipse(self,obs,offset,color):
@@ -130,6 +141,9 @@ class Maze:
                        obs['axis'][1]*self.scale+(offset*self.scale))
         self.image = cv2.ellipse(self.image, center, axis, obs['angle'],
                         obs['start'], obs['end'],color,-1)
+        ellipse = Ellipse((x,y),axis[0],axis[1])
+        self.patches.append(ellipse)
+        # print(self.patches)
 
 
     def draw_rotated_rect(self,obs,offset,color):
@@ -149,7 +163,9 @@ class Maze:
         contour = np.array(spoints, dtype=np.int32)
         
         if offset == 0:
-            self.image = cv2.drawContours(self.image,[contour],-1,color,-1) 
+            self.image = cv2.drawContours(self.image,[contour],-1,color,-1)
+            polygon = Polygon(points, True)
+            self.patches.append(polygon) 
         else:
             off_contour = np.squeeze(contour)
             polygon = Polygon(off_contour)
@@ -306,6 +322,7 @@ class Maze:
 
         maze_file.close()
         self.obstacles = obstacles
+
     
 
 if __name__ == '__main__':
