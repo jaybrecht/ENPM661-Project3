@@ -3,6 +3,8 @@ import numpy as np
 import math
 import time
 from plotter import*
+from collections import deque
+import bisect
 
 class Robot:
     def __init__(self,maze,userInput):
@@ -96,8 +98,6 @@ class Robot:
 
 
     def A_star(self):
-        def take_second(elem):
-            return elem[1]
         # each node = (x,y,theta) <- floats
         # nodes = [node1,node2,..,node_n]
         self.nodes = []
@@ -123,15 +123,18 @@ class Robot:
         self.parents[start_disc[0],start_disc[1],start_disc[2]] = -1 #set parent of start node to -1
         
         # queue needs to be a list of tuples (node_ind,cost2come+cost2goal)
-        queue = [(0,cost2come+cost2goal)]
-    
+        queue = deque()
+        queue.append(0)
+
+        sort_func = [0]
+        
+        goal = self.discretize(self.goal)
         self.foundGoal = False    
 
         while queue:
-            #sort queue
-            queue.sort(key = take_second)
             # Set the current node as the top of the queue and remove it
-            parent = queue.pop(0)[0]
+            parent = queue.popleft()
+            sort_func.pop(0)
 
             cur_node = self.nodes[parent]
             cur_disc = self.discretize(cur_node)
@@ -147,11 +150,14 @@ class Robot:
                     self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
                     self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
                     self.nodes.append(p)
-                    queue.append((len(self.nodes)-1,cost2come+self.d+cost2goal))
+                    cost_func = cost2come+self.d+cost2goal
+                    ind = bisect.bisect(sort_func,cost_func)
+                    queue.insert(ind,len(self.nodes)-1)
+                    sort_func.insert(ind,cost_func)
                 elif cost2come + self.d < self.costs2come[disc_p[0],disc_p[1],disc_p[2]]:
                     self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
                     self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
-                if disc_p == self.discretize(self.goal):
+                if disc_p == goal:
                     self.foundGoal = True
                     queue.clear()
                     break
