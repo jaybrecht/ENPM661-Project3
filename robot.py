@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import math
 import time
-
+from plotter import*
 
 class Robot:
     def __init__(self,maze,userInput):
@@ -12,8 +12,8 @@ class Robot:
         if userInput:
             self.get_user_nodes()
         else:
-            self.start = (0,0,0)
-            self.goal = (280,180,0)
+            self.start = (100,50,0)
+            self.goal = (100,250,0)
             self.d = 1
         
 
@@ -53,6 +53,7 @@ class Robot:
             theta = theta-360
 
         new_point = (x,y,theta)
+        plotter(self.maze.ax,point,new_point)
         return new_point
 
 
