@@ -3,6 +3,7 @@ import numpy as np
 import math
 import time
 from collections import deque
+from plotter import*
 
 class Robot:
     def __init__(self,maze):
@@ -28,7 +29,6 @@ class Robot:
             phi=0
             x=x+d*math.cos(theta)
             y=y+d*math.sin(theta)
-            new_point = (,,theta)
 
         elif direction == 'right30':
             phi=np.deg2rad(-30)
@@ -43,6 +43,7 @@ class Robot:
         theta=np.rad2deg(theta+phi)
         new_point=(x,y,theta)
 
+        plotter(point,new_point)
 
         return new_point
 
