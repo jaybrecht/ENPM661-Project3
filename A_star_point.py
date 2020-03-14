@@ -48,5 +48,5 @@ else:
 robot.visualize(show_visualization,write_to_video,stepsize)
 endtime = dtime.now()
 runtime=endtime-starttime
-print("Finished in "+str(warptime)+" (hours:min:sec)")
+print("Finished in "+str(runtime)+" (hours:min:sec)")
 plt.show()
