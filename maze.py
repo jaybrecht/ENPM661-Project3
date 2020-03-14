@@ -81,7 +81,7 @@ class Maze:
                 a2 = obs['axis'][1]+ offset
                 if ((((x-center[0])**2)/a1**2) + (((y-center[1])**2)/a2**2) <= 1):
                     return True
-            elif obs['type'] == 'p' or obs['type'] == 'r':
+            elif obs['type'] == 'p' or obs['type'] == 'rr':
                 points=obs['points'].copy()
                 points.append(points[0])
                 contour = np.array(obs['points'], dtype=np.int32)    
