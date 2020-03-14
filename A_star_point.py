@@ -33,6 +33,9 @@ p = PatchCollection(maze.patches, alpha=1)
 colors = 100*np.random.rand(len(maze.patches))
 p.set_array(np.array(colors))
 maze.ax.add_collection(p)
+# blank=np.full((200,300,3),(255,255,255))
+# plt.imshow(blank,origin='upper')
+plt.ylim(max(plt.ylim()), min(plt.ylim()))
 plt.show()
 
 
