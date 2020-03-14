@@ -21,20 +21,19 @@ plt.xlabel('X')
 plt.ylabel('Y')
 plt.title("Maze")
 ax.set_aspect('equal')
-# ax.imshow(x, origin='upper', interpolation=interp)
-# ax.yaxis.set_ticks(np.arange(200, 0, 20)) # set y-ticks
+
 
 # Construct maze object
 scale = 1
 maze = Maze('maze2.txt', scale,ax)
 
-# print(maze.patches)
+
 p = PatchCollection(maze.patches, alpha=1)
-colors = 100*np.random.rand(len(maze.patches))
-p.set_array(np.array(colors))
+# colors = 100*np.random.rand(len(maze.patches))
+p.set_array(np.array((255,255,255)))
 maze.ax.add_collection(p)
-# blank=np.full((200,300,3),(255,255,255))
-# plt.imshow(blank,origin='upper')
+
+# Flip the axis
 plt.ylim(max(plt.ylim()), min(plt.ylim()))
 plt.show()
 
