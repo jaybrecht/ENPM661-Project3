@@ -29,7 +29,7 @@ polygon
 
 ellipse
     center: 150,100
-    axis: 40,20
+    axis: 80,40
     angle: 0 
     start: 0
     end: 360
