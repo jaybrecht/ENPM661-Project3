@@ -12,8 +12,8 @@ class Robot:
         if userInput:
             self.get_user_nodes()
         else:
-            self.start = (100,50,0)
-            self.goal = (100,250,0)
+            self.start = (25,100,0)
+            self.goal = (75,100,0)
             self.d = 1
         
 

@@ -36,29 +36,29 @@ maze.ax.add_collection(p)
 
 
 
-# Contstruct the robot
-robot = PointRobot(maze,userInput)
-print("Robot created")
+# # Contstruct the robot
+# robot = PointRobot(maze,userInput)
+# print("Robot created")
 
-# Run Search
-# if search_type == 'D':
-#     robot.Dijkstra()
-# if search_type == 'B':
-#     robot.BFS()
-if search_type == 'A':
-    robot.A_star()
+# # Run Search
+# # if search_type == 'D':
+# #     robot.Dijkstra()
+# # if search_type == 'B':
+# #     robot.BFS()
+# if search_type == 'A':
+#     robot.A_star()
 
 
-# Flip the axis
+# # Flip the axis
 plt.ylim(max(plt.ylim()), min(plt.ylim()))
 plt.show()
 
-# if robot.foundGoal:
-#     print('Yay')
-#     # robot.generate_path()
-# else:
-#     print('The goal could not be found')
-#     exit()
+# # if robot.foundGoal:
+# #     print('Yay')
+# #     # robot.generate_path()
+# # else:
+# #     print('The goal could not be found')
+# #     exit()
 
-# # Visualize the path
-# # robot.visualize(show_visualization,write_to_video,stepsize)
+# # # Visualize the path
+# # # robot.visualize(show_visualization,write_to_video,stepsize)
