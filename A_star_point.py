@@ -39,7 +39,7 @@ if search_type == 'A':
 if robot.foundGoal:
 	searchtime=dtime.now()
 	searchtime=searchtime-starttime
-    print('Found Path in '+str(runtime)+'(hours:min:sec)')
+    print('Found Path in '+str(searchtime)+'(hours:min:sec)')
     robot.generate_path()
 
 else:
