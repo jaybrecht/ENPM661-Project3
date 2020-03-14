@@ -6,48 +6,99 @@ import numpy as np
 class Maze:
     def __init__(self,filename,scale):
         # instatiates an object of class maze
-       
         self.filename = filename
         self.scale = scale
         self.read_obstacles()
 
         self.image = np.zeros((self.height*scale,self.width*scale,3),np.uint8)
-        self.maze = np.zeros((self.height,self.width),dtype=np.uint8)
 
         for obs in self.obstacles:
             if obs['type'] == 'c': # circle
                 self.draw_circle(obs,0,obs['color'])
-                self.define_circle(obs, 0)
                 
             elif obs['type'] == 'p': # polygon
                 self.draw_polygon(obs,0,obs['color'])
-                self.define_polygon(obs, 0)
 
             elif obs['type'] == 'e': # ellipse
                 self.draw_ellipse(obs,0,obs['color'])
-                self.define_ellipse(obs, 0)
                 
             elif obs['type'] == 'rr': # rotate rect
                 self.draw_rotated_rect(obs,0,obs['color'])
-                self.define_rotated_rect(obs,0)
-
-        # maze_not_scaled = cv2.resize(self.image,(self.width,self.height))
-        # inds=np.nonzero(maze_not_scaled)
-        
-        # for i in range(len(inds[0])):
-        #     x = inds[1][i]
-        #     y = inds[0][i]
-        #     self.maze[y,x] = 1
+                self.get_rr_points(obs)
 
 
-    def in_maze(self,point):
-        # Checks whether a point is in bounds and not an obstacle
+    def in_bounds(self,point):
         x = point[0]
         y = point[1]
         if 0<=x<self.width and 0<=y<self.height:
-            if self.maze[y,x] != 1:
-                return True
+            return True
+        else:
+            return False
+
+
+    def in_obstacle(self,node,offset):
+        x = node[0]
+        y = node[1]
+       
+        for obs in self.obstacles:
+            if obs['type'] == 'c':
+                center = obs['center']
+                radius = obs['radius']+ offset
+                if ((x-center[0])**2 + (y-center[1])**2 <= radius**2):
+                    return True
+            elif obs['type'] == 'e':
+                center = obs['center']
+                a1 = obs['axis'][0]+ offset
+                a2 = obs['axis'][1]+ offset
+                if ((((x-center[0])**2)/a1**2) + (((y-center[1])**2)/a2**2) <= 1):
+                    return True
+            elif obs['type'] == 'p' or obs['type'] == 'r':
+                points=obs['points'].copy()
+                points.append(points[0])
+                contour = np.array(obs['points'], dtype=np.int32)    
+                topx,topy,w,h = cv2.boundingRect(contour)
+                topx -= offset
+                topy -= offset
+                w += offset*2
+                h += offset*2
+                test = (topx+w//2, topy+h//2)
+
+                point_sets = []
+                for i in range(len(points)-1):
+                    p = np.array([points[i][0],points[i][1],0])
+                    q = np.array([points[i+1][0],points[i+1][1],0])
+                    v1 = q-p
+                    v1_hat = v1/ np.linalg.norm(v1)
+                    z = np.array([0,0,1])
+                    off_hat = np.cross(z,v1_hat)
+                    off_vect = off_hat*offset
+                    new_p = p+off_vect
+                    new_q = q+off_vect
+                    point_sets.append([(new_p[0],new_p[1]),(new_q[0],new_q[1])])
+
+                a,b,c = [],[],[]
+                for i in range(len(point_sets)):
+                    p1 = point_sets[i][0]
+                    p2 = point_sets[i][1]
+                    ai=(p1[1]-p2[1])
+                    bi=(p2[0]-p1[0])
+                    ci=((p1[0]*p2[1])-(p2[0]*p1[1]))
+                    if (ai*test[0]+bi*test[1]+ci<0):
+                        ai*=-1
+                        bi*=-1
+                        ci*=-1
+                    a.append(ai)
+                    b.append(bi)
+                    c.append(ci)
+                count=0
+  
+                for i in range(len(a)):
+                    if ((a[i]*x + b[i]*y + c[i]) >= 0):
+                        count+=1
+                    if count==len(a):
+                        return True
         return False
+
 
     def draw_circle(self,obs,offset,color):
         # Draws a circle on the maze image
@@ -59,20 +110,6 @@ class Maze:
         self.image = cv2.circle(self.image,center,radius+(offset*self.scale),color,-1)
 
 
-    def define_circle(self,obs,offset):
-        # Write code that modifies that attribute maze to have 1s everywhere inside
-        # of the obstacle obs. Should expand the obstacle by the offset
-        center = obs['center']
-        radius = obs['radius']+offset
-        topx = center[0]-radius
-        topy = center[1]-radius
-        for x in range(topx, topx+2*radius+1):
-            for y in range(topy, topy+2*radius+1):
-                if ((x-center[0])**2 + (y-center[1])**2 <= radius**2):
-                    if self.in_maze((x,y)):
-                        self.maze[y,x]=1
-
-
     def draw_polygon(self,obs,offset,color):
         # Draws a polygon on the maze image
         points = []
@@ -82,70 +119,6 @@ class Maze:
         contour = np.array(points, dtype=np.int32)
         
         self.image = cv2.drawContours(self.image,[contour],-1,color,-1) 
-        # else:
-            # off_contour = np.squeeze(contour)
-            # polygon = Polygon(off_contour)
-            # offset_poly = polygon.buffer(offset*self.scale,cap_style=2, join_style=2)
-            # off_points = offset_poly.exterior.coords
-            # off_contour = np.array(off_points, dtype=np.int32)
-            # self.image = cv2.drawContours(self.image,[off_contour],-1,color,-1) 
-
-
-    def define_polygon(self,obs,offset):
-        # Write code that modifies that attribute maze to have 1s everywhere inside
-        # of the obstacle obs. Should expand the obstacle by the offset
-        points=obs['points'].copy()
-        points.append(points[0])
-        contour = np.array(obs['points'], dtype=np.int32)    
-        topx,topy,w,h = cv2.boundingRect(contour)
-        topx -= offset
-        topy -= offset
-        w += offset*2
-        h += offset*2
-        # cv2.rectangle(self.maze,(topx,topy),(topx+w,topy+h),(255),1)
-        test = (topx+w//2, topy+h//2)
-
-        point_sets = []
-        for i in range(len(points)-1):
-            p = np.array([points[i][0],points[i][1],0])
-            q = np.array([points[i+1][0],points[i+1][1],0])
-            v1 = q-p
-            v1_hat = v1/ np.linalg.norm(v1)
-            z = np.array([0,0,1])
-            off_hat = np.cross(z,v1_hat)
-            off_vect = off_hat*offset
-            new_p = p+off_vect
-            new_q = q+off_vect
-            point_sets.append([(new_p[0],new_p[1]),(new_q[0],new_q[1])])
-
-        a,b,c=[],[],[]
-        for i in range(len(point_sets)):
-            p1 = point_sets[i][0]
-            p2 = point_sets[i][1]
-            ai=(p1[1]-p2[1])
-            bi=(p2[0]-p1[0])
-            ci=((p1[0]*p2[1])-(p2[0]*p1[1]))
-            if (ai*test[0]+bi*test[1]+ci<0):
-                ai*=-1
-                bi*=-1
-                ci*=-1
-            a.append(ai)
-            b.append(bi)
-            c.append(ci)
-        
-        for x in range(topx, topx+w+1):
-            for y in range(topy, topy+h+1):
-                count=0    
-                for i in range(len(a)):
-                    if ((a[i]*x + b[i]*y + c[i]) >= 0):
-                        count+=1
-                if count==len(a):
-                    if offset == 0:
-                        if self.in_maze((x,y)):
-                            self.maze[y,x]=1
-                    else:
-                        if self.in_maze((x,y)):
-                            self.maze[y,x]=1
                 
 
     def draw_ellipse(self,obs,offset,color):
@@ -157,21 +130,6 @@ class Maze:
                        obs['axis'][1]*self.scale+(offset*self.scale))
         self.image = cv2.ellipse(self.image, center, axis, obs['angle'],
                         obs['start'], obs['end'],color,-1)
-
-
-    def define_ellipse(self,obs,offset):
-        # Write code that modifies that attribute maze to have 1s everywhere inside
-        # of the obstacle obs. Should expand the obstacle by the offset
-        center = obs['center']
-        a1 = obs['axis'][0]+offset
-        a2 = obs['axis'][1]+offset
-        topx = center[0]-a1
-        topy = center[1]-a2
-        for x in range(topx, topx+2*a1+1):
-            for y in range(topy, topy+2*a2+1):
-                if ((((x-center[0])**2)/a1**2) + (((y-center[1])**2)/a2**2) <= 1):
-                    if self.in_maze((x,y)):
-                        self.maze[y,x]=1
 
 
     def draw_rotated_rect(self,obs,offset,color):
@@ -201,7 +159,7 @@ class Maze:
             self.image = cv2.drawContours(self.image,[off_contour],-1,color,-1)
 
 
-    def define_rotated_rect(self,obs,offset):
+    def get_rr_points(self,obs):
         # Write code that modifies that attribute maze to have 1s everywhere inside
         # of the obstacle obs. Should expand the obstacle by the offset, may be easier
         # to just define the points and pass them into define_polygon
@@ -214,63 +172,7 @@ class Maze:
         p3 = (p1[0]+(h*math.cos(ang2)),p1[1]+(h*math.sin(ang2)))
         p4 = (p3[0]-(w*math.cos(ang1)),p3[1]+(w*math.sin(ang1)))
         points = [p1,p2,p4,p3]
-        obs = {'points': points,'type':'r'}
-        self.define_polygon(obs, offset)
-        
-
-    def expand_obstacles(self,offset):
-        off_color = (255,102,0)
-        for obs in self.obstacles:
-            if obs['type'] == 'c': # circle
-                # self.draw_circle(obs,offset,off_color)
-                # self.draw_circle(obs,0,obs['color'])
-                self.define_circle(obs, offset)
-
-            elif obs['type'] == 'p': # polygon
-                # self.draw_polygon(obs,offset,off_color)    
-                # self.draw_polygon(obs,0,obs['color'])  
-                self.define_polygon(obs, offset)       
-
-            elif obs['type'] == 'e': # ellipse
-                # self.draw_ellipse(obs,offset,off_color)
-                # self.draw_ellipse(obs,0,obs['color'])
-                self.define_ellipse(obs, offset)
-
-            elif obs['type'] == 'rr': # rotate rect
-                # self.draw_rotated_rect(obs,offset,off_color)
-                # self.draw_rotated_rect(obs,0,obs['color'])
-                self.define_rotated_rect(obs, offset)
-
-        # maze_not_scaled = cv2.resize(self.image,(self.width,self.height))
-        # self.maze = np.zeros((self.height,self.width),dtype=np.uint8)
-        # inds=np.nonzero(maze_not_scaled)
-        
-        # for i in range(len(inds[0])):
-        #     x = inds[1][i]
-        #     y = self.height-inds[0][i]
-        #     if self.in_maze((x,y)):
-        #         self.maze[y,x] = 1
-
-
-    def contract_obstacles(self,offset):
-        empty_color = (0,0,0)
-        for obs in self.obstacles:
-            if obs['type'] == 'c': # circle
-                self.draw_circle(obs,offset,empty_color)
-                self.draw_circle(obs,0,obs['color'])
-
-            elif obs['type'] == 'p': # polygon
-                self.draw_polygon(obs,offset,empty_color)    
-                self.draw_polygon(obs,0,obs['color'])        
-
-            elif obs['type'] == 'e': # ellipse
-                self.draw_ellipse(obs,offset,empty_color)
-                self.draw_ellipse(obs,0,obs['color'])
-
-            elif obs['type'] == 'rr': # rotate rect
-                self.draw_rotated_rect(obs,offset,empty_color)
-                self.draw_rotated_rect(obs,0,obs['color'])
-                
+        obs['points'] = points           
 
 
     def read_obstacles(self):
@@ -413,10 +315,14 @@ class Maze:
         start_point = (int(start_str_x),int(start_str_y))
 
         # Check if start point is valid in maze 
-        if self.in_maze(start_point):
+        if self.in_bounds(start_point):
             pass
         else:
             print("The start point is not valid")
+            exit()
+
+        if self.in_obstacle(start_point):
+            print("The start point is in an obstacle")
             exit()
             
         print('Please enter a goal point (x,y)')
@@ -425,18 +331,22 @@ class Maze:
         goal_point = (int(start_str_x),int(start_str_y))
 
         # Check if goal point is valid in maze 
-        if self.in_maze(goal_point):
+        if self.in_bounds(goal_point):
             pass
         else:
             print("The goal point is not valid")
             exit()
 
+        if self.in_obstacle(goal_point):
+            print("The goal point is in an obstacle")
+            exit()
+
         self.start = start_point
         self.goal = goal_point
 
-
 if __name__ == '__main__':
-    maze = 'maze1'
-    mymaze = Maze(maze+'.txt',5)
-    cv2.imwrite('Images/maze1.png',mymaze.image)
-
+    maze = 'maze2'
+    mymaze = Maze(maze+'.txt',1)
+    cv2.imshow('Maze2',mymaze.image)
+    cv2.waitKey(0)
+    print(mymaze.in_obstacle((251.5,150),2))
