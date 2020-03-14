@@ -52,8 +52,7 @@ class Robot:
         if theta >= 360:
             theta = theta-360
 
-
-
+        new_point = (x,y,theta)
         return new_point
 
 
