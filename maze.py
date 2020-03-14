@@ -153,9 +153,9 @@ class Maze:
         ang1 = math.radians(obs['angle'])
         ang2 = math.radians(90-obs['angle'])
         p1 = obs['start_point']
-        p2 = (p1[0]-(w*math.cos(ang1)),p1[1]+(w*math.sin(ang1)))
-        p3 = (p1[0]+(h*math.cos(ang2)),p1[1]+(h*math.sin(ang2)))
-        p4 = (p3[0]-(w*math.cos(ang1)),p3[1]+(w*math.sin(ang1)))
+        p2 = (p1[0]-(w*math.cos(ang1)),p1[1]-(w*math.sin(ang1)))
+        p3 = (p1[0]+(h*math.cos(ang2)),p1[1]-(h*math.sin(ang2)))
+        p4 = (p3[0]-(w*math.cos(ang1)),p3[1]-(w*math.sin(ang1)))
         points = [p1,p2,p4,p3]
         spoints = []
         for p in points:
