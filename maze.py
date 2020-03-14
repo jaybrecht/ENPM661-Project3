@@ -30,7 +30,7 @@ class Maze:
     def in_bounds(self,point):
         x = point[0]
         y = point[1]
-        if 0<=x<self.width and 0<=y<self.height:
+        if 0<=x<=self.width-1 and 0<=y<=self.height-1:
             return True
         else:
             return False
@@ -307,42 +307,6 @@ class Maze:
         maze_file.close()
         self.obstacles = obstacles
     
-
-    def get_user_nodes(self):
-        print('Please enter a start point (x,y)')
-        start_str_x = input('start x: ')
-        start_str_y = input('start y: ')
-        start_point = (int(start_str_x),int(start_str_y))
-
-        # Check if start point is valid in maze 
-        if self.in_bounds(start_point):
-            pass
-        else:
-            print("The start point is not valid")
-            exit()
-
-        if self.in_obstacle(start_point):
-            print("The start point is in an obstacle")
-            exit()
-            
-        print('Please enter a goal point (x,y)')
-        start_str_x = input('start x: ')
-        start_str_y = input('start y: ')
-        goal_point = (int(start_str_x),int(start_str_y))
-
-        # Check if goal point is valid in maze 
-        if self.in_bounds(goal_point):
-            pass
-        else:
-            print("The goal point is not valid")
-            exit()
-
-        if self.in_obstacle(goal_point):
-            print("The goal point is in an obstacle")
-            exit()
-
-        self.start = start_point
-        self.goal = goal_point
 
 if __name__ == '__main__':
     maze = 'maze2'

@@ -2,15 +2,23 @@ import cv2
 import numpy as np
 import math
 import time
-from collections import deque
-from plotter import*
+
 
 class Robot:
-    def __init__(self,maze):
+    def __init__(self,maze,userInput):
         self.maze = maze
+        self.pos_thresh = .5
+        self.ang_thresh = 30
+        if userInput:
+            self.get_user_nodes()
+        else:
+            self.start = (0,0,0)
+            self.goal = (280,180,0)
+            self.d = 1
+        
 
     def move(self,point,direction):
-        d=self.dist
+        d=self.d
         x = point[0]
         y = point[1]
         theta = np.deg2rad(point[2])
@@ -40,11 +48,11 @@ class Robot:
             x=x+d*math.cos(phi)*math.cos(phi)
             y=x+d*math.sin(phi)*math.sin(phi)
 
-        theta=np.rad2deg(theta+phi)
-        new_point=(x,y,theta)
+        theta = round(np.rad2deg(theta+phi))
+        if theta >= 360:
+            theta = theta-360
 
-        plotter(point,new_point)
-
+        new_point = (x,y,theta)
         return new_point
 
 
@@ -54,17 +62,14 @@ class Robot:
         neighbors = []
         for direction in directions:
             new_point = self.move(cur_node,direction)
-            if self.maze.in_maze(new_point):
-                if len(direction) == 2:
-                    cost = math.sqrt(2)
-                else:
-                    cost = 1
-
-                neighbors.append((new_point,cost))
+            if self.maze.in_bounds(new_point):
+                if not self.maze.in_obstacle(new_point,self.offset):
+                    neighbors.append(new_point)
 
         return neighbors
 
-    def trunc(a,thresh):
+
+    def trunc(self,a,thresh):
         dec_a = a % 1
         int_a = a//1
 
@@ -73,7 +78,6 @@ class Robot:
         else: 
             for val in np.arange(0,1,thresh):
                 if(dec_a-val)<=thresh:
-                    print(val)
                     if abs(dec_a-(val)) < abs(dec_a-(val+thresh)):
                         trunc_a = int_a+val
                     else:
@@ -82,177 +86,81 @@ class Robot:
 
         return trunc_a
 
-    def discretize(point, thresh):
+
+    def discretize(self,point):
         x=point[0]
         y=point[1]
         theta=point[2]
 
-        x=trunc(x,thresh)
-        y=trunc(y,thresh)
+        x = int(self.trunc(x,self.pos_thresh)*(1/self.pos_thresh))
+        y = int(self.trunc(y,self.pos_thresh)*(1/self.pos_thresh))
+        theta = int(theta*(1/self.ang_thresh))
+
 
         new_point=(x,y,theta)
         return new_point
 
 
-
-    def BFS(self):
-        start_point = self.maze.start
-        goal_point = self.maze.goal
-        maze = self.maze.maze
-        nodes = []
-
-        # Checked points are additionally stored in a set which is much faster for 
-        # checking if the node has already been visited
-        points = {start_point}
-        parents = np.full((maze.shape[0],maze.shape[1]),np.nan,dtype=np.int32)
-
-         #set start node to have parent of -1 and cost of 0
-        nodes.append(start_point) #add the start node to nodes
-        parents[start_point[1],start_point[0]] = -1
-
-        # The queue is strucuted as a deque which allows for much faster operation
-        # when accessing the first item in the list
-        queue = deque()
-        queue.append(0) #set the start_node as the first node in the queue
-
-        isgoal = False
-
-        while queue:
-            # Set the current node as the top of the queue and remove it
-            parent = queue.popleft()
-            cur_node = nodes[parent]
-            neighbors = self.check_neighbors(cur_node)
-
-            for n in neighbors:
-                p = n[0]
-                if p not in points:
-                    nodes.append(p)
-                    points.add(p)
-                    queue.append(len(nodes)-1)
-                    parents[p[1],p[0]] = parent
-                if p == goal_point:
-                    isgoal = True
-                    queue.clear()
-                    break
-
-        self.nodes = nodes
-        self.parents = parents
-        self.foundGoal = isgoal
-
-    def Dijkstra(self):
-        start_point = self.maze.start
-        goal_point = self.maze.goal
-        maze = self.maze.maze
-        
-        nodes = []
-
-        # Checked points are additionally stored in a set which is much faster for 
-        # checking if the node has already been visited
-        points = {start_point}
-        costs = np.full((maze.shape[0],maze.shape[1]),np.inf)
-        parents = np.full((maze.shape[0],maze.shape[1]),np.nan,dtype=np.int32)
-
-         #set start node to have parent of -1 and cost of 0
-        nodes.append(start_point) #add the start node to nodes
-        costs[start_point[1],start_point[0]] = 0
-        parents[start_point[1],start_point[0]] = -1
-
-        # The queue is strucuted as a deque which allows for much faster operation
-        # when accessing the first item in the list
-        queue = deque()
-        queue.append(0) #set the start_node as the first node in the queue
-
-        isgoal = False
-        cost2come = 0
-
-        while queue:
-            # Set the current node as the top of the queue and remove it
-            parent = queue.popleft()
-            cur_node = nodes[parent]
-            cost2come = costs[cur_node[1],cur_node[0]]
-            neighbors = self.check_neighbors(cur_node)
-
-            for n in neighbors:
-                p = n[0]
-                c = n[1]
-                if p not in points:
-                    nodes.append(p)
-                    points.add(p)
-                    queue.append(len(nodes)-1)
-                if cost2come + c < costs[p[1],p[0]]:
-                    costs[p[1],p[0]] = cost2come + c
-                    parents[p[1],p[0]] = parent
-                if p == goal_point:
-                    isgoal = True
-                    queue.clear()
-                    break
-
-        self.nodes = nodes
-        self.parents = parents
-        self.costs = costs
-        self.foundGoal = isgoal
-
     def A_star(self):
-        start_point = self.maze.start
-        goal_point = self.maze.goal
-        maze = self.maze.maze
-        
-        nodes = []
-
+        def take_second(elem):
+            return elem[1]
         # each node = (x,y,theta) <- floats
         # nodes = [node1,node2,..,node_n]
+        self.nodes = []
+        self.nodes.append(self.start)
 
-        # checked_nodes = binary 3D matrix of size h/thresh,w/thresh,360/th_thresh 1 for have visited 0 for haven't
-        # costs = 3D matrix of size h/thresh,w/thresh,360/th_thresh index is (cost2come,cost2goal)
-        # parents = 3D matrix of size h/thresh,w/thresh,360/th_thresh index is ind of parent in nodes
-
-        # queue needs to be a tuple of (node_ind,cost2come+cost2goal)
-
-        # Checked points are additionally stored in a set which is much faster for 
-        # checking if the node has already been visited
-        points = {start_point}
-        costs = np.full((maze.shape[0],maze.shape[1]),np.inf)
-        parents = np.full((maze.shape[0],maze.shape[1]),np.nan,dtype=np.int32)
-
-         #set start node to have parent of -1 and cost of 0
-        nodes.append(start_point) #add the start node to nodes
-        costs[start_point[1],start_point[0]] = 0
-        parents[start_point[1],start_point[0]] = -1
-
-        # The queue is strucuted as a deque which allows for much faster operation
-        # when accessing the first item in the list
-        queue = deque()
-        queue.append(0) #set the start_node as the first node in the queue
-
-        isgoal = False
+        # visited_nodes = binary 3D matrix 1 for have visited 0 for haven't
+        size_x = int(self.maze.width/self.pos_thresh)
+        size_y = int(self.maze.height/self.pos_thresh)
+        size_th = int(360/self.ang_thresh)
+        visited_nodes = np.zeros((size_x,size_y,size_th))
+        start_disc = self.discretize(self.start)
+        visited_nodes[start_disc[0],start_disc[1],start_disc[2]] = 1 #set start node as checked
+        
+        # costs = 3D matrix where at discretized point is tuple (cost2come,cost2goal)
+        self.costs2come = np.full((visited_nodes.shape[0],visited_nodes.shape[1],visited_nodes.shape[2]),np.inf)
+        self.costs2goal = np.full((visited_nodes.shape[0],visited_nodes.shape[1],visited_nodes.shape[2]),np.inf)
         cost2come = 0
+        self.costs2come[start_disc[0],start_disc[1],start_disc[2]] = cost2come
+        cost2goal = math.sqrt((self.goal[0] - self.start[0])**2 + (self.goal[1] - self.start[1])**2)
+        
+        # parents = 3D matrix of size h/thresh,w/thresh,360/th_thresh index is ind of parent in nodes
+        self.parents = np.full((visited_nodes.shape[0],visited_nodes.shape[1],visited_nodes.shape[2]),np.nan)
+        self.parents[start_disc[0],start_disc[1],start_disc[2]] = -1 #set parent of start node to -1
+        
+        # queue needs to be a list of tuples (node_ind,cost2come+cost2goal)
+        queue = [(0,cost2come+cost2goal)]
+    
+        self.foundGoal = False    
 
         while queue:
+            #sort queue
+            queue.sort(key = take_second)
             # Set the current node as the top of the queue and remove it
-            parent = queue.popleft()
-            cur_node = nodes[parent]
-            cost2come = costs[cur_node[1],cur_node[0]]
+            parent = queue.pop(0)[0]
+
+            cur_node = self.nodes[parent]
+            cur_disc = self.discretize(cur_node)
+            cost2come = self.costs2come[cur_disc[0],cur_disc[1],cur_disc[2]]
+
             neighbors = self.check_neighbors(cur_node)
 
-            for n in neighbors:
-                p = n[0]
-                c = n[1]
-                if p not in points:
-                    nodes.append(p)
-                    points.add(p)
-                    queue.append(len(nodes)-1)
-                if cost2come + c < costs[p[1],p[0]]:
-                    costs[p[1],p[0]] = cost2come + c
-                    parents[p[1],p[0]] = parent
-                if p == goal_point:
-                    isgoal = True
+            for p in neighbors:
+                cost2goal = math.sqrt((self.goal[0] - p[0])**2 + (self.goal[1] - p[1])**2)
+                disc_p = self.discretize(p)
+                if visited_nodes[disc_p[0],disc_p[1],disc_p[2]] == 0: 
+                    visited_nodes[disc_p[0],disc_p[1],disc_p[2]] = 1
+                    self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
+                    self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
+                    self.nodes.append(p)
+                    queue.append((len(self.nodes)-1,cost2come+self.d+cost2goal))
+                elif cost2come + self.d < self.costs2come[disc_p[0],disc_p[1],disc_p[2]]:
+                    self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
+                    self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
+                if disc_p == self.discretize(self.goal):
+                    self.foundGoal = True
                     queue.clear()
                     break
-
-        self.nodes = nodes
-        self.parents = parents
-        self.costs = costs
-        self.foundGoal = isgoal
 
 
     def generate_path(self):
@@ -273,12 +181,79 @@ class Robot:
             else:
                 self.path.insert(0,nodes[ind])
 
-    
+
+    def get_user_nodes(self):
+        valid_input = False
+        while not valid_input:
+            valid_pt = False
+            while not valid_pt:
+                print('Please enter a start point (x,y,theta)')
+                start_str_x = input('start x: ')
+                start_str_y = input('start y: ')
+                start_str_th = input('start theta: ')
+                try:
+                    start_point = (float(start_str_x),float(start_str_y),int(start_str_th))
+                except ValueError:
+                    print('Please enter a number')
+                else:
+                    # Check if start point is valid in maze 
+                    if self.maze.in_bounds(start_point):
+                        if self.maze.in_obstacle(start_point,0):
+                            print("The start point is in an obstacle")
+                        else:
+                            valid_pt = True
+                    else:
+                        print("The start point is not valid")
+
+            valid_pt = False
+            while not valid_pt:
+                print('Please enter a goal point (x,y)')
+                goal_str_x = input('goal x: ')
+                goal_str_y = input('goal y: ')
+                goal_str_th = input('goal theta: ')
+                try:
+                    goal_point = (float(goal_str_x),float(goal_str_y),int(goal_str_th))
+                except ValueError:
+                    print('Please enter a number')
+                else:
+                    # Check if goal point is valid in maze 
+                    if self.maze.in_bounds(goal_point):
+                        if self.maze.in_obstacle(goal_point,0):
+                            print("The goal point is in an obstacle")
+                        else:
+                            valid_pt = True
+                    else:
+                        print("The goal point is not valid")
+
+            # Check that start is not goal
+            if self.discretize(start_point) == self.discretize(goal_point):
+                print('The start and goal cannot be the same point')
+            else:
+                valid_input = True
+
+        valid_d = False
+        while not valid_d:
+            print('Please enter the distance your robot can travel per move')
+            d_str = input('distance: ')
+            try:
+                d = float(d_str)
+                if 1 <= d <= 10:
+                    valid_d = True
+                else:
+                    print('The value must be between 1 and 10')
+            except ValueError:
+                print('Please enter a number')
+
+
+        self.start = start_point
+        self.goal = goal_point
+        self.d = d
 
 
 class PointRobot(Robot):
-    def __init__(self,maze):
-        super().__init__(maze)
+    def __init__(self,maze,userInput):
+        super().__init__(maze,userInput)
+        self.offset = 0
 
     def visualize(self,show,output,stepsize):
         if output:
@@ -355,6 +330,8 @@ class RigidRobot(Robot):
         else:
             print('Please enter a number')
             exit()
+
+        self.offset = self.radius+self.clearance
 
 
     def visualize(self,show,output,stepsize):
