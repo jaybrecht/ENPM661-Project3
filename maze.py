@@ -141,7 +141,7 @@ class Maze:
                        obs['axis'][1]*self.scale+(offset*self.scale))
         self.image = cv2.ellipse(self.image, center, axis, obs['angle'],
                         obs['start'], obs['end'],color,-1)
-        ellipse = Ellipse((x,y),axis[0],axis[1])
+        ellipse = Ellipse((x,y),2*axis[0],2*axis[1])
         self.patches.append(ellipse)
         # print(self.patches)
 
