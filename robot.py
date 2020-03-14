@@ -3,6 +3,7 @@ import numpy as np
 import math
 import time
 
+
 class Robot:
     def __init__(self,maze,userInput):
         self.maze = maze
@@ -51,7 +52,7 @@ class Robot:
         if theta >= 360:
             theta = theta-360
 
-        new_point=(x,y,theta)
+
 
         return new_point
 
