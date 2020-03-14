@@ -39,7 +39,7 @@ class Robot:
             phi=np.deg2rad(-60)
 
         x=x+d*math.cos(theta+phi)
-        y=x+d*math.sin(theta+phi)
+        y=y+d*math.sin(theta+phi)
 
         theta = round(np.rad2deg(theta+phi))
         if theta >= 360:

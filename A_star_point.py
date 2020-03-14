@@ -36,17 +36,17 @@ maze.ax.add_collection(p)
 
 
 
-# # Contstruct the robot
-# robot = PointRobot(maze,userInput)
-# print("Robot created")
+# Contstruct the robot
+robot = PointRobot(maze,userInput)
+print("Robot created")
 
 # # Run Search
 # # if search_type == 'D':
 # #     robot.Dijkstra()
 # # if search_type == 'B':
 # #     robot.BFS()
-# if search_type == 'A':
-#     robot.A_star()
+if search_type == 'A':
+    robot.A_star()
 
 
 # # Flip the axis
