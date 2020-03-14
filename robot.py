@@ -13,7 +13,7 @@ class Robot:
             self.get_user_nodes()
         else:
             self.start = (25,100,0)
-            self.goal = (75,100,0)
+            self.goal = (250,100,0)
             self.d = 5
         
 
@@ -263,57 +263,14 @@ class PointRobot(Robot):
         self.offset = 0
 
     def visualize(self,show,output,stepsize):
-        if output:
-            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-            frame_size = (self.maze.image.shape[1], self.maze.image.shape[0])
-            today = time.strftime("%m-%d__%H.%M.%S")
-            videoname=str(today)
-            fps_out = 60
-            out = cv2.VideoWriter(str(videoname)+".mp4", fourcc, fps_out, frame_size)
-            print("Writing to Video, Please Wait")
-
-        cur_frame = 1
-        tot_frames = (len(self.nodes)//stepsize)+1
-  
         for i,point in enumerate(self.nodes):
-            if self.maze.scale == 1:
-                self.image[point[1],point[0]] = (0,255,255)
-            else:
-                sx = point[0]*self.maze.scale
-                sy = (self.maze.height-point[1])*self.maze.scale
-                ex = sx+self.maze.scale
-                ey = sy+self.maze.scale
-                cv2.rectangle(self.maze.image,(sx,sy),(ex,ey),(0,255,255),-1)
-            if i == 5000:
-                cv2.imwrite('Images/searched_nodes.png',self.maze.image)
+            neighbors = self.check_neighbors(point)
+            for n in neighbors:
+                self.plotter(point,n,color='gray')
             
-            if i%stepsize == 0:
-                if output:
-                    print('Frame number:' + str(cur_frame) + ' of ' + str(tot_frames))
-                    out.write(self.maze.image)
-                    time.sleep(0.005)
-                    cur_frame += 1
-                if show:
-                    cv2.imshow('Maze Visualization',self.maze.image)
-                if cv2.waitKey(1) == ord('q'):
-                    exit()
-
         for point in self.path:
-            sx = point[0]*self.maze.scale
-            sy = (self.maze.height-point[1])*self.maze.scale
-            cv2.circle(self.maze.image,(sx,sy),self.maze.scale,(0,0,255),-1)
-            if output:
-                out.write(self.maze.image)
-                time.sleep(0.005)
-            if show:
-                cv2.imshow('Maze Visualization',self.maze.image)
-            if cv2.waitKey(1) == ord('q'):
-                exit()
-            if point == self.maze.goal:
-                # cv2.imwrite('Images/solution.png',self.maze.image)
-                cv2.waitKey(0)
-        if output:
-            out.release()
+            for i in range(len(self.path)-1):
+                self.plotter(self.path[i],self.path[i+1],color='red')
 
 
 class RigidRobot(Robot):

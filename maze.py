@@ -1,7 +1,6 @@
 import cv2 
 import math
 import numpy as np
-# from shapely.geometry import Polygon
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Ellipse, Circle, Wedge, Polygon
 import matplotlib.pyplot as plt
@@ -11,7 +10,7 @@ class Maze:
         # instatiates an object of class maze
         self.filename = filename
 
-        self.fig,self.ax = plt.subplots()
+        self.fig,self.ax = plt.subplots(figsize=(12,8))
 
         major_ticks_x = np.arange(0, 301, 20)
         minor_ticks_x = np.arange(0, 301, 5)

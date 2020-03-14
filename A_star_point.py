@@ -9,7 +9,7 @@ write_to_video = False
 show_visualization = False
 userInput = False
 search_type = 'A' # D for Dijkstra, B for BFS, A for A*
-stepsize = 100 #controls the number of nodes shown in each frame of visualization
+stepsize = 10 #controls the number of nodes shown in each frame of visualization
 
 # Construct maze object
 maze = Maze('maze2.txt')
@@ -29,14 +29,13 @@ if search_type == 'A':
 
 
 if robot.foundGoal:
+    print('Found Path')
     robot.generate_path()
-    for i in range(len(robot.path)-1):
-        robot.plotter(robot.path[i],robot.path[i+1])
-    print(robot.path)
+
 else:
     print('The goal could not be found')
     exit()
 
+# Visualize the path
+robot.visualize(show_visualization,write_to_video,stepsize)
 plt.show()
-# # # Visualize the path
-# # # robot.visualize(show_visualization,write_to_video,stepsize)
