@@ -9,30 +9,31 @@ class Maze:
     def __init__(self,filename):
         # instatiates an object of class maze
         self.filename = filename
+        # plt.ion()
+        self.fig = plt.figure(figsize=(12, 8))
+        self.ax = self.fig.subplots()
 
-        self.fig,self.ax = plt.subplots(figsize=(12,8))
+        # major_ticks_x = np.arange(0, 301, 20)
+        # minor_ticks_x = np.arange(0, 301, 5)
+        # major_ticks_y = np.arange(0, 201, 20)
+        # minor_ticks_y = np.arange(0, 201, 5)
 
-        major_ticks_x = np.arange(0, 301, 20)
-        minor_ticks_x = np.arange(0, 301, 5)
-        major_ticks_y = np.arange(0, 201, 20)
-        minor_ticks_y = np.arange(0, 201, 5)
+        # self.ax.set_xticks(major_ticks_x)
+        # self.ax.set_xticks(minor_ticks_x, minor=True)
+        # self.ax.set_yticks(major_ticks_y)
+        # self.ax.set_yticks(minor_ticks_y, minor=True)
 
-        self.ax.set_xticks(major_ticks_x)
-        self.ax.set_xticks(minor_ticks_x, minor=True)
-        self.ax.set_yticks(major_ticks_y)
-        self.ax.set_yticks(minor_ticks_y, minor=True)
-
-        self.ax.grid(which='minor', alpha=0.2)
-        self.ax.grid(which='major', alpha=0.5)
+        # self.ax.grid(which='minor', alpha=0.2)
+        # self.ax.grid(which='major', alpha=0.5)
 
         self.ax.set_xlim(0, 300)
         self.ax.set_ylim(0, 200)
 
         self.ax.set_aspect('equal')
 
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.title("Maze")
+        # plt.xlabel('X')
+        # plt.ylabel('Y')
+        # plt.title("Maze")
 
         self.patches = []
         self.read_obstacles()        
@@ -53,6 +54,7 @@ class Maze:
                 
 
         p = PatchCollection(self.patches, alpha=1)
+        
         self.ax.add_collection(p)
 
 

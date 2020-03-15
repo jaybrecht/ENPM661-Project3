@@ -2,7 +2,11 @@ import cv2
 import numpy as np
 import math
 import time
-from plotter import*
+import os
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Ellipse, Circle, Wedge, Polygon
+import matplotlib.pyplot as plt
 
 class Robot:
     def __init__(self,maze,userInput):
@@ -12,9 +16,16 @@ class Robot:
         if userInput:
             self.get_user_nodes()
         else:
-            self.start = (0,0,0)
+            self.start = (10,10,30)
             self.goal = (280,180,0)
             self.d = 5
+            self.goal_radius = 1.5
+
+        s_circle = Circle((self.start[0],self.start[1]), 5, color='green',alpha=.4)
+        self.maze.ax.add_patch(s_circle)
+        g_circle = Circle((self.goal[0],self.goal[1]), self.goal_radius, color='red',alpha=.4)
+        self.maze.ax.add_patch(g_circle)
+
         
 
     def move(self,point,direction):
@@ -135,7 +146,8 @@ class Robot:
             #sort queue
             queue.sort(key = take_second)
             # Set the current node as the top of the queue and remove it
-            parent = queue.pop(0)[0]
+            parent,distance = queue.pop(0)
+            print(distance)
 
             cur_node = self.nodes[parent]
             cur_disc = self.discretize(cur_node)
@@ -157,7 +169,7 @@ class Robot:
                 elif cost2come + self.d < self.costs2come[disc_p[0],disc_p[1],disc_p[2]]:
                     self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
                     self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
-                if disc_p == self.discretize(self.goal):
+                if cost2goal<self.goal_radius:
                     self.foundGoal = True
                     queue.clear()
                     break
@@ -266,17 +278,64 @@ class Robot:
 class PointRobot(Robot):
     def __init__(self,maze,userInput):
         super().__init__(maze,userInput)
-        self.offset = 0
+        self.offset = 5
 
-    def visualize(self,show,output,stepsize):
+    def visualize(self,output,stepsize):
+        if output:
+            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
+            filename = 'output/point_robot_plot.mp4'
+            fps_out = 15
+            if os.path.exists(filename):
+                os.remove(filename)
+            out_plt = cv2.VideoWriter(filename, fourcc, fps_out, (1200,800))
+            canvas = FigureCanvas(self.maze.fig)
+            tot_frames = len(self.nodes)//stepsize+len(self.path)
+            cur_frame = 1
+            print('Writing to video. Please Wait.')
+            self.maze.fig.canvas.draw()
+            maze_img = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
+            maze_img = cv2.cvtColor(maze_img,cv2.COLOR_RGB2BGR)
+            # cv2.imshow('Visualization',maze_img)
         for i,point in enumerate(self.nodes):
             neighbors = self.check_neighbors(point)
             for n in neighbors:
                 self.plotter(point,n,color='gray')
+
+            if output:
+                self.maze.fig.canvas.draw()
+                arrows = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
+                arrows = cv2.cvtColor(arrows,cv2.COLOR_RGB2BGR)
+                maze_img = cv2.addWeighted(maze_img, 0.5, arrows, 0.5, 0)
+                cv2.imshow('Visualization',maze_img)
+                if cv2.waitKey(1) == ord('q'):
+                    exit()
+                out_plt.write(maze_img)
+                # print('Frame ' + str(cur_frame) + ' of ' + str(tot_frames))
+                # cur_frame+=1
+            else:
+                plt.pause(0.01)
+
+        for i in range(len(self.path)-1):
+            self.plotter(self.path[i],self.path[i+1],color='red')
+
+            if output:
+                self.maze.fig.canvas.draw()
+                arrows = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
+                arrows = cv2.cvtColor(arrows,cv2.COLOR_RGB2BGR)
+                maze_img = cv2.addWeighted(maze_img, 0.5, arrows, 0.5, 0)
+                cv2.imshow('Visualization',maze_img)
+                if cv2.waitKey(1) == ord('q'):
+                    exit()
+                out_plt.write(maze_img)
+            else:
+                plt.pause(0.05)
+
+        if output:
+            out_plt.release()
+        else:
+            plt.ioff()
+            plt.show()
             
-        for point in self.path:
-            for i in range(len(self.path)-1):
-                self.plotter(self.path[i],self.path[i+1],color='red')
 
 
 class RigidRobot(Robot):
