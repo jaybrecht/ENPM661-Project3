@@ -18,9 +18,9 @@ class Robot:
         else:
             self.start = (50,30,60)
             self.goal = (150,150,0)
-            self.d = 5
+            self.d = 1
             self.clearance=1
-            self.radius=5
+            self.radius=1
         
         self.goal_radius = 5
         self.offset=self.clearance+self.radius
