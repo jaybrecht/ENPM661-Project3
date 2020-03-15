@@ -16,12 +16,16 @@ class Robot:
         if userInput:
             self.get_user_nodes()
         else:
-            self.start = (10,10,30)
-            self.goal = (280,180,0)
+            self.start = (50,30,60)
+            self.goal = (150,150,0)
             self.d = 5
-            self.goal_radius = 1.5
+            self.clearance=1
+            self.radius=5
+        
+        self.goal_radius = 5
+        self.offset=self.clearance+self.radius
 
-        s_circle = Circle((self.start[0],self.start[1]), 5, color='green',alpha=.4)
+        s_circle = Circle((self.start[0],self.start[1]), self.goal_radius, color='green',alpha=.4)
         self.maze.ax.add_patch(s_circle)
         g_circle = Circle((self.goal[0],self.goal[1]), self.goal_radius, color='red',alpha=.4)
         self.maze.ax.add_patch(g_circle)
@@ -248,8 +252,8 @@ class Robot:
             print('Please enter the distance your robot can travel per move')
             d_str = input('distance: ')
             try:
-                d = float(d_str)
-                if 1 <= d <= 10:
+                self.d = float(d_str)
+                if 1 <= self.d <= 10:
                     valid_d = True
                 else:
                     print('The value must be between 1 and 10')
@@ -257,14 +261,45 @@ class Robot:
                 print('Please enter a number')
 
 
+        valid_clear = False
+        while not valid_clear:
+            print('Please enter the distance your robot can travel per move')
+            clearance_str = input('distance: ')
+            try:
+                self.clearance = float(clearance_str)
+                valid_clear = True
+            except ValueError:
+                print('Please enter a number')
+
+        valid_radius = False
+        while not valid_radius:
+            print('Please enter the distance your robot can travel per move')
+            radius_str = input('distance: ')
+            try:
+                self.radius = float(radius_str)
+                valid_radius = True
+            except ValueError:
+                print('Please enter a number')
+
+
+
+
         self.start = start_point
         self.goal = goal_point
         self.d = d
 
 
-    def plotter(self,start_pos,end_pos,color="black"):
+
+    def plotter(self,start_pos, end_pos,color="black"):
         x_s=start_pos[0]
         y_s=start_pos[1]
+        theta=start_pos[2]
+
+        # xvec=self.d*math.cos(theta)
+        # # yvec=[]
+        # # for phi in range(-60,60,30):
+        # #     xvec.append(self.d*math.cos(theta+phi))
+        # #     yvec.append(self.d*math.sin(theta+phi))
 
         x_f=end_pos[0]
         y_f=end_pos[1]
@@ -272,34 +307,30 @@ class Robot:
         dx=x_f-x_s
         dy=y_f-y_s
 
+        # self.maze.ax.quiver(x_s, y_s, xvec, yvec, units='xy' ,scale=1, color=color, headwidth = 1, headlength=0)
         q = self.maze.ax.arrow(x_s, y_s, dx, dy, head_width=0.5,length_includes_head=True, head_length=0.5, fc=color, ec=color)
 
-
-class PointRobot(Robot):
-    def __init__(self,maze,userInput):
-        super().__init__(maze,userInput)
-        self.offset = 5
 
     def visualize(self,output,stepsize):
         if output:
             fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
             filename = 'output/point_robot_plot.mp4'
-            fps_out = 15
+            fps_out = 35
             if os.path.exists(filename):
                 os.remove(filename)
             out_plt = cv2.VideoWriter(filename, fourcc, fps_out, (1200,800))
             canvas = FigureCanvas(self.maze.fig)
-            tot_frames = len(self.nodes)//stepsize+len(self.path)
-            cur_frame = 1
+            # tot_frames = len(self.nodes)//stepsize+len(self.path)
+            # cur_frame = 1
             print('Writing to video. Please Wait.')
             self.maze.fig.canvas.draw()
             maze_img = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
             maze_img = cv2.cvtColor(maze_img,cv2.COLOR_RGB2BGR)
             # cv2.imshow('Visualization',maze_img)
         for i,point in enumerate(self.nodes):
-            neighbors = self.check_neighbors(point)
-            for n in neighbors:
-                self.plotter(point,n,color='gray')
+            neighborhood=self.check_neighbors(point)
+            for neighbor in neighborhood:
+                self.plotter(point,neighbor,color='gray')
 
             if output:
                 self.maze.fig.canvas.draw()
@@ -315,20 +346,30 @@ class PointRobot(Robot):
             else:
                 plt.pause(0.01)
 
-        for i in range(len(self.path)-1):
-            self.plotter(self.path[i],self.path[i+1],color='red')
 
+
+        # Draw the path
+        for i in range(len(self.path)-1):
             if output:
+                # maze_img = cv2.addWeighted(maze_img, 0.5, arrows, 0.5, 0)
+                if i==0:
+                    pass
+                else:
+                    s_circle.remove()
+                s_circle = Circle((self.path[i][0],self.path[i][1]), self.offset, color='green')
+                self.maze.ax.add_patch(s_circle)
                 self.maze.fig.canvas.draw()
-                arrows = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
-                arrows = cv2.cvtColor(arrows,cv2.COLOR_RGB2BGR)
-                maze_img = cv2.addWeighted(maze_img, 0.5, arrows, 0.5, 0)
+                maze_img = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
+                maze_img = cv2.cvtColor(maze_img,cv2.COLOR_RGB2BGR)
+
                 cv2.imshow('Visualization',maze_img)
                 if cv2.waitKey(1) == ord('q'):
                     exit()
                 out_plt.write(maze_img)
             else:
                 plt.pause(0.05)
+
+            self.plotter(self.path[i],self.path[i+1],color='red')
 
         if output:
             out_plt.release()
@@ -338,83 +379,3 @@ class PointRobot(Robot):
             
 
 
-class RigidRobot(Robot):
-    def __init__(self,maze):
-        super().__init__(maze)
-        self.get_params()
-
-    def get_params(self):
-        print('Please enter the size of your robot')
-        size_str = input('radius: ')
-        if size_str.isdigit():
-            self.radius = int(size_str)
-        else:
-            print('Please enter a number')
-            exit()
-        
-        print('Please enter the clearance for your robot')
-        clear_str = input('clearance: ')
-        if clear_str.isdigit():
-            self.clearance = int(clear_str)
-        else:
-            print('Please enter a number')
-            exit()
-
-        self.offset = self.radius+self.clearance
-
-
-    def visualize(self,show,output,stepsize):
-        node_color = (102, 255, 255)
-        if output:
-            fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-            frame_size = (self.maze.image.shape[1], self.maze.image.shape[0])
-            today = time.strftime("%m-%d__%H.%M.%S")
-            videoname=str(today)
-            fps_out = 60
-            out = cv2.VideoWriter(str(videoname)+".mp4", fourcc, fps_out, frame_size)
-            print("Writing to Video, Please Wait")
-
-        cur_frame = 1
-        tot_frames = (len(self.nodes)//stepsize)+1
-  
-        for i,point in enumerate(self.nodes):
-            if self.maze.scale == 1:
-                self.image[point[1],point[0]] = node_color
-            else:
-                sx = point[0]*self.maze.scale
-                sy = (self.maze.height-point[1])*self.maze.scale
-                ex = sx+self.maze.scale
-                ey = sy+self.maze.scale
-                cv2.rectangle(self.maze.image,(sx,sy),(ex,ey),node_color,-1)
-
-            if i%stepsize == 0:
-                if output:
-                    print('Frame number:' + str(cur_frame) + ' of ' + str(tot_frames))
-                    out.write(self.maze.image)
-                    time.sleep(0.005)
-                    cur_frame += 1
-                if show:
-                    cv2.imshow('Maze Visualization',self.maze.image)
-                    
-                if cv2.waitKey(1) == ord('q'):
-                    exit()
-
-        # self.maze.contract_obstacles(self.radius)
-
-        for point in self.path:
-            sx = point[0]*self.maze.scale
-            sy = (self.maze.height-point[1])*self.maze.scale
-            cv2.circle(self.maze.image,(sx,sy),self.maze.scale*self.radius,(0,0,255),-1)
-            if output:
-                out.write(self.maze.image)
-                time.sleep(0.005)
-            if show:
-                cv2.imshow('Maze Visualization',self.maze.image)
-            if cv2.waitKey(1) == ord('q'):
-                exit()
-            if point == self.maze.goal:
-                #cv2.imwrite('searched_nodes.png',self.maze.image)
-                cv2.waitKey(0)
-
-        if output:
-            out.release()
