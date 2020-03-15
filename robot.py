@@ -314,7 +314,7 @@ class Robot:
     def visualize(self,output,stepsize):
         if output:
             fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-            filename = 'output/point_robot_plot.mp4'
+            filename = 'output/rigid_robot_plot.mp4'
             fps_out = 35
             if os.path.exists(filename):
                 os.remove(filename)
@@ -350,14 +350,18 @@ class Robot:
 
         # Draw the path
         for i in range(len(self.path)-1):
-            if output:
-                # maze_img = cv2.addWeighted(maze_img, 0.5, arrows, 0.5, 0)
+            if output:          
+                #Remove the previous circle
                 if i==0:
                     pass
                 else:
                     s_circle.remove()
-                s_circle = Circle((self.path[i][0],self.path[i][1]), self.offset, color='green')
-                self.maze.ax.add_patch(s_circle)
+                #Draw a new circle
+                # s_circle = Circle((self.path[i][0],self.path[i][1]), self.offset, color='green')
+                s_circle=plt.Circle((self.path[i][0],self.path[i][1]), self.offset, color='orange')
+                # self.maze.ax.add_patch(s_circle)
+                self.maze.ax.add_artist(s_circle)
+
                 self.maze.fig.canvas.draw()
                 maze_img = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
                 maze_img = cv2.cvtColor(maze_img,cv2.COLOR_RGB2BGR)
