@@ -5,7 +5,7 @@ import time
 from datetime import datetime as dtime
 # Import our functions
 from maze import Maze
-from robot import PointRobot
+from robot import Robot
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 
@@ -23,7 +23,7 @@ maze = Maze('maze2.txt')
 print("Maze created")
 
 # Contstruct the robot
-robot = PointRobot(maze,userInput)
+robot = Robot(maze,userInput)
 print("Robot created")
 
 # Run Search
