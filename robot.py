@@ -12,8 +12,8 @@ class Robot:
         if userInput:
             self.get_user_nodes()
         else:
-            self.start = (25,100,0)
-            self.goal = (250,100,0)
+            self.start = (0,0,0)
+            self.goal = (280,180,0)
             self.d = 5
         
 
@@ -44,6 +44,8 @@ class Robot:
         new_theta = round(np.rad2deg(theta+phi))
         if new_theta >= 360:
             new_theta = new_theta-360
+        if new_theta <= -360:
+            new_theta = new_theta+360
 
         new_point = (new_x,new_y,new_theta)
         # plotter(self.maze.ax,point,new_point)
@@ -88,6 +90,8 @@ class Robot:
 
         x = int(self.trunc(x,self.pos_thresh)*(1/self.pos_thresh))
         y = int(self.trunc(y,self.pos_thresh)*(1/self.pos_thresh))
+        if theta < 0:
+            theta = 360+round(theta)
         theta = int(theta*(1/self.ang_thresh))
 
 
@@ -142,12 +146,14 @@ class Robot:
             for p in neighbors:
                 cost2goal = math.sqrt((self.goal[0] - p[0])**2 + (self.goal[1] - p[1])**2)
                 disc_p = self.discretize(p)
+                # print(p)
+                # print(disc_p)
                 if visited_nodes[disc_p[0],disc_p[1],disc_p[2]] == 0: 
                     visited_nodes[disc_p[0],disc_p[1],disc_p[2]] = 1
                     self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
                     self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
                     self.nodes.append(p)
-                    queue.append((len(self.nodes)-1,cost2come+self.d+cost2goal))
+                    queue.append((len(self.nodes)-1,cost2goal))
                 elif cost2come + self.d < self.costs2come[disc_p[0],disc_p[1],disc_p[2]]:
                     self.costs2come[disc_p[0],disc_p[1],disc_p[2]] = cost2come+self.d
                     self.parents[disc_p[0],disc_p[1],disc_p[2]] = parent
