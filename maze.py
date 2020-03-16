@@ -1,5 +1,5 @@
-import cv2 
 import math
+import cv2
 import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Ellipse, Circle, Wedge, Polygon
@@ -9,31 +9,30 @@ class Maze:
     def __init__(self,filename):
         # instatiates an object of class maze
         self.filename = filename
-        # plt.ion()
         self.fig = plt.figure(figsize=(12, 8))
         self.ax = self.fig.subplots()
 
-        # major_ticks_x = np.arange(0, 301, 20)
-        # minor_ticks_x = np.arange(0, 301, 5)
-        # major_ticks_y = np.arange(0, 201, 20)
-        # minor_ticks_y = np.arange(0, 201, 5)
+        major_ticks_x = np.arange(0, 301, 50)
+        minor_ticks_x = np.arange(0, 301, 10)
+        major_ticks_y = np.arange(0, 201, 50)
+        minor_ticks_y = np.arange(0, 201, 10)
 
-        # self.ax.set_xticks(major_ticks_x)
-        # self.ax.set_xticks(minor_ticks_x, minor=True)
-        # self.ax.set_yticks(major_ticks_y)
-        # self.ax.set_yticks(minor_ticks_y, minor=True)
+        self.ax.set_xticks(major_ticks_x)
+        self.ax.set_xticks(minor_ticks_x, minor=True)
+        self.ax.set_yticks(major_ticks_y)
+        self.ax.set_yticks(minor_ticks_y, minor=True)
 
-        # self.ax.grid(which='minor', alpha=0.2)
-        # self.ax.grid(which='major', alpha=0.5)
+        self.ax.grid(which='minor', alpha=0.2)
+        self.ax.grid(which='major', alpha=0.5)
 
         self.ax.set_xlim(0, 300)
         self.ax.set_ylim(0, 200)
 
         self.ax.set_aspect('equal')
 
-        # plt.xlabel('X')
-        # plt.ylabel('Y')
-        # plt.title("Maze")
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.title("Maze")
 
         self.patches = []
         self.read_obstacles()        
@@ -51,11 +50,6 @@ class Maze:
             elif obs['type'] == 'rr': # rotate rect
                 self.get_rr_points(obs)
                 self.draw_polygon(obs,0,obs['color'])
-                
-
-        p = PatchCollection(self.patches, alpha=1)
-        
-        self.ax.add_collection(p)
 
 
     def in_bounds(self,point):
@@ -135,24 +129,26 @@ class Maze:
         # Draws a circle on the maze image
         x,y = obs['center']
         radius = obs['radius']
-        circle = Circle((x, y), radius)
-        self.patches.append(circle)
+        circle = Circle((x, y),radius,color=obs['color'],alpha=obs['alpha'],linewidth=0)
+        # self.patches.append(circle)
+        self.ax.add_patch(circle)
 
 
     def draw_polygon(self,obs,offset,color):
         # Draws a polygon on the maze image
         points = obs['points']
-        polygon = Polygon(points, True)
-        self.patches.append(polygon)
+        polygon = Polygon(points, True,color=obs['color'],alpha=obs['alpha'],linewidth=0)
+        # self.patches.append(polygon)
+        self.ax.add_patch(polygon)
                 
 
     def draw_ellipse(self,obs,offset,color):
         # Draws an ellipse on the maze image
         x,y = obs['center']
         axis = obs['axis']
-        ellipse = Ellipse((x,y),2*axis[0],2*axis[1])
-        self.patches.append(ellipse)
-
+        ellipse = Ellipse((x,y),2*axis[0],2*axis[1],color=obs['color'],alpha=obs['alpha'],linewidth=0)
+        # self.patches.append(ellipse)
+        self.ax.add_patch(ellipse)
 
     def get_rr_points(self,obs):
         # Write code that modifies that attribute maze to have 1s everywhere inside
@@ -198,8 +194,9 @@ class Maze:
                     if next_line.split(':')[0].strip() == 'radius':
                         radius = int(next_line.split(':')[-1])
                     if next_line.split(':')[0].strip() == 'color':
-                        bgr = next_line.split(':')[-1].split(',')
-                        color = (int(bgr[0]),int(bgr[1]),int(bgr[2]))
+                        color = 'xkcd:'+next_line.split(':')[-1].strip()
+                    if next_line.split(':')[0].strip() == 'alpha':
+                        alpha = float(next_line.split(':')[-1])
                     j += 1
                     if j<len(lines):
                         next_line = lines[j]
@@ -207,7 +204,7 @@ class Maze:
                         break
 
                 if radius!=None and center!=None:
-                    obs = {'type':'c','center':center,'radius':radius,'color':color}
+                    obs = {'type':'c','center':center,'radius':radius,'color':color,'alpha':alpha}
                     obstacles.append(obs)
             
             if line == 'polygon\n':
@@ -220,8 +217,9 @@ class Maze:
                         p = next_line.split(':')[-1].split(',')
                         points.append((int(p[0]),int(p[1])))
                     if next_line.split(':')[0].strip() == 'color':
-                        bgr = next_line.split(':')[-1].split(',')
-                        color = (int(bgr[0]),int(bgr[1]),int(bgr[2]))
+                        color = 'xkcd:'+next_line.split(':')[-1].strip()
+                    if next_line.split(':')[0].strip() == 'alpha':
+                        alpha = float(next_line.split(':')[-1])
                     j += 1
                     if j<len(lines):
                         next_line = lines[j]
@@ -229,7 +227,7 @@ class Maze:
                         break
 
                 if len(points)>0:
-                    obs = {'type':'p','points':points,'color':color}
+                    obs = {'type':'p','points':points,'color':color,'alpha':alpha}
                     obstacles.append(obs)
             
             if line == 'ellipse\n': 
@@ -255,8 +253,9 @@ class Maze:
                     if next_line.split(':')[0].strip() == 'end':
                         radius = int(next_line.split(':')[-1])
                     if next_line.split(':')[0].strip() == 'color':
-                        bgr = next_line.split(':')[-1].split(',')
-                        color = (int(bgr[0]),int(bgr[1]),int(bgr[2]))
+                        color = 'xkcd:'+next_line.split(':')[-1].strip()
+                    if next_line.split(':')[0].strip() == 'alpha':
+                        alpha = float(next_line.split(':')[-1])
                     j += 1
                     if j<len(lines):
                         next_line = lines[j]
@@ -265,7 +264,7 @@ class Maze:
                 
                 if radius!=None and axis!=None:
                     obs = {'type':'e','center':center,'axis':axis,'angle':angle,
-                           'start':start,'end':end,'color':color}
+                           'start':start,'end':end,'color':color,'alpha':alpha}
                     obstacles.append(obs)
 
             if line == 'rotatedrect\n': 
@@ -286,8 +285,9 @@ class Maze:
                     if next_line.split(':')[0].strip() == 'angle':
                         angle = int(next_line.split(':')[-1])
                     if next_line.split(':')[0].strip() == 'color':
-                        bgr = next_line.split(':')[-1].split(',')
-                        color = (int(bgr[0]),int(bgr[1]),int(bgr[2]))
+                        color = 'xkcd:'+next_line.split(':')[-1].strip()
+                    if next_line.split(':')[0].strip() == 'alpha':
+                        alpha = float(next_line.split(':')[-1])
                     j += 1
                     if j<len(lines):
                         next_line = lines[j]
@@ -296,7 +296,7 @@ class Maze:
                 
                 if start_point!=None and height!=None and width!=None and angle!=None:
                     obs = {'type':'rr','start_point':start_point,'height':height,
-                           'width':width,'angle':angle,'color':color}
+                           'width':width,'angle':angle,'color':color,'alpha':alpha}
                     obstacles.append(obs)
 
         maze_file.close()
@@ -305,8 +305,8 @@ class Maze:
     
 
 if __name__ == '__main__':
-    maze = 'maze2'
-    mymaze = Maze(maze+'.txt',1)
-    cv2.imshow('Maze2',mymaze.image)
-    cv2.waitKey(0)
-    print(mymaze.in_obstacle((251.5,150),2))
+    maze = 'maze'
+    mymaze = Maze(maze+'.txt')
+    print(mymaze.obstacles[0]['alpha'])
+    plt.show()
+    
