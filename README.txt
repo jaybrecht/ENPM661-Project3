@@ -2,8 +2,7 @@
 
 ## Introduction
 
-The goal of this project is to find the optimal path through a Cartesian maze with obstacles for a rigid robot using the A* algorithm. The robot for this project is only able to move forward by a set distance, at one of five angles; (-60, -30, 0, 30, 60). The default maze 300x200 and 6 obstacles, a concave polygon, a circle, an ellipse, a rotated rectangle, and a diamond. 
-
+The goal of this project is to find the optimal path through a Cartesian maze with obstacles for a rigid robot using the A* algorithm. The robot for this project is only able to move forward by a set distance, at one of five angles: (-60, -30, 0, 30, 60). The default maze is 300x200 with 6 obstacles - a concave polygon, a circle, an ellipse, a rotated rectangle, and a diamond. 
 ![maze](https://github.com/jaybrecht/ENPM661-Project3/blob/master/Images/maze.png)
 
 The user specifies a start point and goal point in the maze and the program finds the optimal path to the goal.
@@ -12,6 +11,7 @@ The user specifies a start point and goal point in the maze and the program find
 
 To run the program, clone this repository, open a new terminal window and type `python Astar_rigid.py`, if you have additional older versions of python installed you may need to run `python3` instead. The program will prompt you to enter a start point and goal point, the radius of your robot, and the clearance between your robot and the obstacles. If the points are valid and a solution is possible, the program will then show the visualization of the solution. This mode treats your robot as a circle with the given radius and expands all of the obstacles by the radius and clearance.
 
+In our tests, the program usually solves the path in less than 3 seconds, but takes up to 35 minutes to export the visualization/video. 
 
 ## Output
 
