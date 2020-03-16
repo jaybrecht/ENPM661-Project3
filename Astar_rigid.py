@@ -6,8 +6,8 @@ from datetime import datetime as dtime
 from maze import Maze
 from robot import Robot
 
-write_to_video = True
-show_visualization = False
+write_to_video = False
+show_visualization = True
 userInput = True
 
 # Construct maze object
