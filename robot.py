@@ -13,7 +13,7 @@ class Robot:
         self.maze = maze
         self.pos_thresh = .5
         self.ang_thresh = 30
-        self.goal_radius = 5
+        self.goal_radius = 1.5
 
         if userInput:
             self.get_user_nodes()
