@@ -322,12 +322,13 @@ class Robot:
                     self.maze.fig.canvas.draw()
                     maze_img = np.frombuffer(self.maze.fig.canvas.tostring_rgb(), dtype=np.uint8).reshape(self.maze.fig.canvas.get_width_height()[::-1] + (3,))
                     maze_img = cv2.cvtColor(maze_img,cv2.COLOR_RGB2BGR)
-                    cv2.imshow('Visualization',maze_img)
+                    out_plt.write(maze_img)
+                    
 
                 if show:
                     if cv2.waitKey(1) == ord('q'):
                         exit()
-                    out_plt.write(maze_img)
+                    cv2.imshow('Visualization',maze_img)
 
                 arrow.remove()
                 arrow = self.plotter(point,neighbor,color='gray')
