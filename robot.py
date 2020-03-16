@@ -300,7 +300,7 @@ class Robot:
     def visualize(self,output,show):
         if output:
             fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')
-            filename = 'output/rigid_robot_plot.mp4'
+            filename = 'rigid_robot_plot.mp4'
             fps_out = 35
             
             if os.path.exists(filename):
