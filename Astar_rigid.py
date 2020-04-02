@@ -6,9 +6,9 @@ from datetime import datetime as dtime
 from maze import Maze
 from robot import Robot
 
-write_to_video = False
-show_visualization = True
-userInput = True
+write_to_video = True
+show_visualization = False
+userInput = False
 
 # Construct maze object
 maze = Maze('maze.txt')
@@ -20,6 +20,7 @@ robot = Robot(maze,userInput)
 starttime = dtime.now()
 
 # Run Search
+print("Starting search: ")
 robot.A_star()
 
 if robot.foundGoal:
